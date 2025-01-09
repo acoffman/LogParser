@@ -38,20 +38,24 @@ struct LogParser: AsyncParsableCommand {
         fileHandle.closeFile()
       }
 
-      for try await line in fileHandle.bytes.lines {
-        //for speed, don't parse the line at all unless it contains our target string
-        if let filter = self.pathFilter {
-          if !line.contains(filter) { continue }
-        }
-
-        if let request = try? parser.parseLine(line) {
-          //make sure the filter string appears specifically in the request path
+      if let data = try? fileHandle.readToEnd(), let contents = String(data: data, encoding: .utf8)
+      {
+        let lines = contents.components(separatedBy: .newlines)
+        for line in lines {
+          //for speed, don't parse the line at all unless it contains our target string
           if let filter = self.pathFilter {
-            if !request.path.contains(filter) { continue }
+            if !line.contains(filter) { continue }
           }
-          try database.insertRequest(request)
-        } else {
-          print("Failed to parse: \(line)")
+
+          if let request = try? parser.parseLine(line) {
+            //make sure the filter string appears specifically in the request path
+            if let filter = self.pathFilter {
+              if !request.path.contains(filter) { continue }
+            }
+            try database.insertRequest(request)
+          } else {
+            print("Failed to parse: \(line)")
+          }
         }
       }
     } catch {
