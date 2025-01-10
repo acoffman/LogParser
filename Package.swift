@@ -8,6 +8,9 @@ let package = Package(
   platforms: [
     .macOS(.v15)
   ],
+  products: [
+    .executable(name: "log-parser", targets: ["LogParser"])
+  ],
   dependencies: [
     .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.15.3"),
     .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0"),
