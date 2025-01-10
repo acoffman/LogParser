@@ -5,11 +5,11 @@ struct Database {
   var db: Connection
 
   let requests = Table("requests")
-  let id = SQLite.Expression<Int64>("id")
+  let id = SQLite.Expression<Int>("id")
   let ip = SQLite.Expression<String>("ip")
   let path = SQLite.Expression<String>("path")
   let timestamp = SQLite.Expression<Date>("timestamp")
-  let size = SQLite.Expression<Int64>("size")
+  let size = SQLite.Expression<Int>("size")
   let userAgent = SQLite.Expression<String>("userAgent")
 
   func setup() throws {
@@ -44,5 +44,37 @@ struct Database {
         userAgent <- request.userAgent
       )
     )
+  }
+
+  func runReport(_ reportType: ReportType, limit: Int? = nil, rowHandler: (String, Int) -> Void)
+    throws
+  {
+
+    let countCol: SQLite.Expression<Int>
+    let groupCol: SQLite.Expression<String>
+
+    switch reportType {
+    case .pathCounts:
+      countCol = self.id.count
+      groupCol = self.path
+    case .requestsByIp:
+      countCol = self.id.count
+      groupCol = self.ip
+    case .dataPerPath:
+      countCol = self.size.sum ?? 0
+      groupCol = self.path
+    case .dataPerIp:
+      countCol = self.size.sum ?? 0
+      groupCol = self.ip
+    }
+
+    let query = self.requests.group(groupCol)
+      .select(groupCol, countCol)
+      .limit(limit)
+      .order(countCol.desc)
+
+    for row in try db.prepare(query) {
+      rowHandler(row[groupCol], row[countCol])
+    }
   }
 }

@@ -23,7 +23,7 @@ struct Parser {
           ip: String(result.ip),
           path: String(result.path),
           timestamp: date,
-          size: Int64(String(result.size))!,
+          size: Int(String(result.size))!,
           userAgent: String(result.userAgent)
         )
       }
