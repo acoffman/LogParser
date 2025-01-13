@@ -46,9 +46,13 @@ struct Database {
     )
   }
 
-  func runReport(_ reportType: ReportType, limit: Int? = nil, rowHandler: (String, Int) -> Void)
-    throws
-  {
+  func runReport(
+    _ reportType: ReportType,
+    limit: Int? = nil,
+    startDate: Date? = nil,
+    endDate: Date? = nil,
+    rowHandler: (String, Int) -> Void
+  ) throws {
 
     let countCol: SQLite.Expression<Int>
     let groupCol: SQLite.Expression<String>
@@ -68,10 +72,18 @@ struct Database {
       groupCol = self.ip
     }
 
-    let query = self.requests.group(groupCol)
+    var query = self.requests.group(groupCol)
       .select(groupCol, countCol)
       .limit(limit)
       .order(countCol.desc)
+
+    if startDate != nil {
+      query = query.where(self.timestamp >= startDate!)
+    }
+
+    if endDate != nil {
+      query = query.where(self.timestamp <= endDate!)
+    }
 
     for row in try db.prepare(query) {
       rowHandler(row[groupCol], row[countCol])

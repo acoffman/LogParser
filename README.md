@@ -38,10 +38,13 @@ OPTIONS:
 ```
 OVERVIEW: Generate usage reports
 
-USAGE: log-parser report [--limit <limit>] [--database <database>] [--path-counts] [--requests-by-ip] [--data-per-path] [--data-per-ip]
+USAGE: log-parser report [--limit <limit>] [--start-date <start-date>] [--end-date <end-date>] [--database <database>] [--path-counts] [--requests-by-ip] [--data-per-path] [--data-per-ip]
 
 OPTIONS:
   --limit <limit>         Limit the number of reported results
+  --start-date <start-date>
+                          Include only requests on or after this date
+  --end-date <end-date>   Include only requests on or before this date
   -d, --database <database>
                           Data directory for storing the SQLite db (default:
                           /Users/adm/.local/share/logparser)
