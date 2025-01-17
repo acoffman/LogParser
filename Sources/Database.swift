@@ -2,7 +2,7 @@ import Foundation
 import SQLite
 
 struct Database {
-  var db: Connection
+  var conn: Connection
 
   let requests = Table("requests")
   let id = SQLite.Expression<Int>("id")
@@ -13,8 +13,8 @@ struct Database {
   let userAgent = SQLite.Expression<String>("userAgent")
 
   func setup() throws {
-    if db.userVersion == 0 {
-      try db.run(
+    if conn.userVersion == 0 {
+      try conn.run(
         requests.create(ifNotExists: true) { t in
           t.column(id, primaryKey: .autoincrement)
           t.column(ip)
@@ -24,18 +24,18 @@ struct Database {
           t.column(userAgent)
         })
 
-      try db.run(requests.createIndex(ip))
-      try db.run(requests.createIndex(path))
-      try db.run(requests.createIndex(timestamp))
-      try db.run(requests.createIndex(size))
-      try db.run(requests.createIndex(userAgent))
+      try conn.run(requests.createIndex(ip))
+      try conn.run(requests.createIndex(path))
+      try conn.run(requests.createIndex(timestamp))
+      try conn.run(requests.createIndex(size))
+      try conn.run(requests.createIndex(userAgent))
 
-      db.userVersion = 1
+      conn.userVersion = 1
     }
   }
 
   func insertRequest(_ request: Request) throws {
-    try db.run(
+    try conn.run(
       requests.insert(
         ip <- request.ip,
         path <- request.path,
@@ -44,49 +44,5 @@ struct Database {
         userAgent <- request.userAgent
       )
     )
-  }
-
-  func runReport(
-    _ reportType: ReportType,
-    limit: Int? = nil,
-    startDate: Date? = nil,
-    endDate: Date? = nil,
-    rowHandler: (String, Int) -> Void
-  ) throws {
-
-    let countCol: SQLite.Expression<Int>
-    let groupCol: SQLite.Expression<String>
-
-    switch reportType {
-    case .pathCounts:
-      countCol = self.id.count
-      groupCol = self.path
-    case .requestsByIp:
-      countCol = self.id.count
-      groupCol = self.ip
-    case .dataPerPath:
-      countCol = self.size.sum ?? 0
-      groupCol = self.path
-    case .dataPerIp:
-      countCol = self.size.sum ?? 0
-      groupCol = self.ip
-    }
-
-    var query = self.requests.group(groupCol)
-      .select(groupCol, countCol)
-      .limit(limit)
-      .order(countCol.desc)
-
-    if startDate != nil {
-      query = query.where(self.timestamp >= startDate!)
-    }
-
-    if endDate != nil {
-      query = query.where(self.timestamp <= endDate!)
-    }
-
-    for row in try db.prepare(query) {
-      rowHandler(row[groupCol], row[countCol])
-    }
   }
 }

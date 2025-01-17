@@ -3,8 +3,9 @@ import Foundation
 import SQLite
 
 extension LogParser {
-  struct Report: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "Generate usage reports")
+  struct GenerateReport: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "report", abstract: "Generate usage reports")
 
     @Option(help: "Limit the number of reported results")
     var limit: Int?
@@ -18,21 +19,30 @@ extension LogParser {
     @Flag(help: "Select one or more reports to generate") var reports: [ReportType] = []
 
     public func run() async throws {
+      let availableReports: [ReportType: Report.Type] = [
+        .pathCounts: PathCountsReport.self,
+        .requestsByIp: RequestsByIpReport.self,
+        .dataPerPath: DataPerPathReport.self,
+        .dataPerIp: DataPerIpReport.self,
+      ]
+
       if self.reports.isEmpty {
         print("Please select one or more reports to generate.")
         return
       }
 
       do {
-        let db = try Connection(
+        let conn = try Connection(
           self.databaseOptions.dbLocation.appending(self.databaseOptions.databaseName))
-        let database = Database(db: db)
+        let database = Database(conn: conn)
 
-        for report in self.reports {
-          try database.runReport(
-            report, limit: self.limit, startDate: self.startDate, endDate: self.endDate
-          ) { (val, count) in
-            print("\(val)\t\(count)")
+        for selectedReport in self.reports {
+          if let reportType = availableReports[selectedReport] {
+            let report = reportType.init(db: database)
+            try report.run(limit: self.limit, startDate: self.startDate, endDate: self.endDate) {
+              (val, count) in
+              print("\(val)\t\(report.formatter(count))")
+            }
           }
           print("\n")
         }

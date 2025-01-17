@@ -9,7 +9,7 @@ struct Request {
   var userAgent: String
 }
 
-enum ReportType: EnumerableFlag {
+enum ReportType: EnumerableFlag, Hashable {
   case pathCounts
   case requestsByIp
   case dataPerPath

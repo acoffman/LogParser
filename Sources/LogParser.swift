@@ -6,7 +6,7 @@ import SQLite
 struct LogParser: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     abstract: "A utility for ingesting nginx logs and generating reports",
-    subcommands: [Ingest.self, Report.self])
+    subcommands: [Ingest.self, GenerateReport.self])
 
   struct DatabaseOptions: ParsableArguments {
     var databaseName = "/db.sqlite3"

@@ -21,9 +21,9 @@ extension LogParser {
         try fileManager.createDirectory(
           atPath: self.databaseOptions.dbLocation, withIntermediateDirectories: true)
 
-        let db = try Connection(
+        let conn = try Connection(
           self.databaseOptions.dbLocation.appending(self.databaseOptions.databaseName))
-        let database = Database(db: db)
+        let database = Database(conn: conn)
         let parser = Parser()
 
         try database.setup()
