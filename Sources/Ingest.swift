@@ -29,10 +29,8 @@ extension LogParser {
         try database.setup()
 
         let fileUrl = URL(filePath: self.logFile)
-        let fileContent = try String(contentsOf: fileUrl)
-        
-        for line in fileContent.components(separatedBy: .newlines) {
-          if line.isEmpty { continue }
+
+        for try await line in fileUrl.lines {
           //for speed, don't parse the line at all unless it contains our target string
           if let filter = self.pathFilter {
             if !line.contains(filter) { continue }
