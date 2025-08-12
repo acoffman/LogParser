@@ -15,3 +15,9 @@ enum ReportType: EnumerableFlag, Hashable {
   case dataPerPath
   case dataPerIp
 }
+
+enum GroupByPeriod: String, CaseIterable, ExpressibleByArgument {
+  case day = "day"
+  case week = "week"
+  case month = "month"
+}

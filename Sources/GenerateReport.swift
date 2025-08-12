@@ -13,6 +13,8 @@ extension LogParser {
     var startDate: Date?
     @Option(help: "Include only requests on or before this date", transform: DateParser.parseDate)
     var endDate: Date?
+    @Option(help: "Group results by time period (day, week, month)")
+    var groupBy: GroupByPeriod?
 
     @OptionGroup var databaseOptions: DatabaseOptions
 
@@ -39,7 +41,7 @@ extension LogParser {
         for selectedReport in self.reports {
           if let reportType = availableReports[selectedReport] {
             let report = reportType.init(db: database)
-            try report.run(limit: self.limit, startDate: self.startDate, endDate: self.endDate) {
+            try report.run(limit: self.limit, startDate: self.startDate, endDate: self.endDate, groupBy: self.groupBy) {
               (val, count) in
               print("\(val)\t\(report.formatter(count))")
             }
